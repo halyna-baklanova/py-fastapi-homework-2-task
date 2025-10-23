@@ -45,14 +45,21 @@ class MovieListItemSchema(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class MovieDetailSchema(MovieListItemSchema):
+class MovieDetailSchema(BaseModel):
+    id: int
+    name: str
+    overview: str | None = None
+    date: datetime.date
+    score: float | None = None
     budget: float | None = None
     revenue: float | None = None
     status: str | None = None
     languages: list[LanguageResponseSchema] = Field(default_factory=list)
     actors: list[ActorResponseSchema] = Field(default_factory=list)
-    genres: list[GenreResponseSchema]
+    genres: list[GenreResponseSchema] = Field(default_factory=list)
     country: Optional[CountryResponseSchema] = None
+
+    model_config = {"from_attributes": True}
 
 
 class MovieListResponseSchema(BaseModel):
@@ -68,7 +75,7 @@ class MovieListResponseSchema(BaseModel):
 class StatusEnum(str, Enum):
     released = "Released"
     post_production = "Post Production"
-    in_product = "In Production"
+    in_production = "In Production"
 
 
 class CountryEnum(str, Enum):

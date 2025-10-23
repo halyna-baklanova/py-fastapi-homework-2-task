@@ -72,6 +72,8 @@ async def get_movies(
     status_code=status.HTTP_201_CREATED
 )
 async def create_movie(movie: MovieCreateSchema, db: AsyncSession = Depends(get_db)):
+
+    #checking country
     stmt = select(CountryModel).where(CountryModel.code == movie.country)
     country_obj = (await db.execute(stmt)).scalar_one_or_none()
     if not country_obj:
@@ -117,17 +119,23 @@ async def create_movie(movie: MovieCreateSchema, db: AsyncSession = Depends(get_
             await db.flush()
         new_movie.languages.append(language)
 
-    db.add(new_movie)
+    existing_movie_stmt = select(MovieModel).where(
+        MovieModel.name == movie.name,
+        MovieModel.date == movie.date
+    )
+    existing_movie = (await db.execute(existing_movie_stmt)).scalar_one_or_none()
 
-    try:
-        await db.commit()
-        await db.refresh(new_movie)
-    except IntegrityError:
-        await db.rollback()
+    if existing_movie:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"A movie with the name '{movie.name}' and release date '{movie.date}' already exists."
         )
+
+    db.add(new_movie)
+
+    await db.flush()
+    await db.commit()
+    await db.refresh(new_movie)
 
     loaded_movie_result = await db.execute(
         select(MovieModel)

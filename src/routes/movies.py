@@ -73,7 +73,6 @@ async def get_movies(
 )
 async def create_movie(movie: MovieCreateSchema, db: AsyncSession = Depends(get_db)):
 
-    #checking country
     stmt = select(CountryModel).where(CountryModel.code == movie.country)
     country_obj = (await db.execute(stmt)).scalar_one_or_none()
     if not country_obj:
